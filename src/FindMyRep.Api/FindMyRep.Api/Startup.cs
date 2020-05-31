@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using FindMyRep.Api.Models.Configuration;
 using FindMyRep.Api.Providers;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -37,6 +38,7 @@ namespace FindMyRep.Api
             });
 
             services.AddScoped<IGoogleCivicInfoProvider, GoogleCivicInfoProvider>();
+            services.Configure<GoogleApiSettings>(Configuration.GetSection(nameof(GoogleApiSettings)));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
