@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using FindMyRep.Api.Models.Configuration;
 using FindMyRep.Api.Providers;
+using FindMyRep.Api.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -38,6 +39,7 @@ namespace FindMyRep.Api
             });
 
             services.AddScoped<IGoogleCivicInfoProvider, GoogleCivicInfoProvider>();
+            services.AddScoped<ICivicInfoResponseService, CivicInfoResponseService>();
             services.Configure<GoogleApiSettings>(Configuration.GetSection(nameof(GoogleApiSettings)));
         }
 

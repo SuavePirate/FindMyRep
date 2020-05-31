@@ -31,5 +31,39 @@ namespace FindMyRep.Api.Providers
 
             return response;
         }
+
+        public async Task<Official> GetLocalGovernor(string zipCode)
+        {
+            return await GetOfficialByLevel(zipCode, "administrativeArea1", "governor");
+        }
+        public async Task<Official> GetLocalMayor(string zipCode)
+        {
+            return await GetOfficialByLevel(zipCode, "locality", "mayor");
+        }
+        public async Task<Official> GetLocalSenator(string zipCode)
+        {
+            return await GetOfficialByLevel(zipCode, "country", "senator");
+        }
+
+        //public async Task<Official> GetLocalRep(string zipCode)
+        //{
+        //    return await GetOfficialByLevel(zipCode, "administrativeArea1");
+        //}
+
+        private async Task<Official> GetOfficialByLevel(string zipCode, string level, string requiredName)
+        {
+            var response = await GetLocalCivicInfo(zipCode);
+
+            // find the mayor from the response;
+            var office = response.Offices.FirstOrDefault(o => o.Levels.Contains(level) && o.Name.ToLower().Contains(requiredName.ToLower()));
+            if (office is null)
+                return null;
+
+            var officialIndex = office.OfficialIndices[0];
+
+            var official = response.Officials[(int)officialIndex];
+
+            return official;
+        }
     }
 }

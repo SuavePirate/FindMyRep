@@ -14,5 +14,14 @@ namespace FindMyRep.Api.Providers
         /// <param name="zipCode"></param>
         /// <returns></returns>
         Task<RepresentativeInfoResponse> GetLocalCivicInfo(string zipCode);
+
+        /// <summary>
+        /// Gets the governor's info for the given zipCode;
+        /// </summary>
+        /// <param name="zipCode"></param>
+        /// <returns></returns>
+        Task<Official> GetLocalGovernor(string zipCode);
+        Task<Official> GetLocalSenator(string zipCode);
+        Task<Official> GetLocalMayor(string zipCode);
     }
 }
