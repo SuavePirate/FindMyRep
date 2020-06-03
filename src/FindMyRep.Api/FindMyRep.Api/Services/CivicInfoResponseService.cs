@@ -26,7 +26,7 @@ namespace FindMyRep.Api.Services
             return "With the Find My Rep skill, you can ask for your local reps info by zip code";
         }
 
-        public async Task<string> GetResponseAsync(string intent, string zipCode)
+        public async Task<(string OutputSpeech, string DisplayText)> GetResponseAsync(string intent, string zipCode)
         {
             if (zipCode.Length == 4)
             {
@@ -38,34 +38,44 @@ namespace FindMyRep.Api.Services
                 var civicInfo = await _civicInfoProvider.GetLocalCivicInfo(zipCode);
 
                 var response = "Here are all of your reps: ";
+                var displayText = response;
+
                 foreach(var office in civicInfo.Offices)
                 {
                     if (office.Name.ToLower().Contains("president"))
                         continue;
-
-                    response += $"For - {office.Name}, you can contact: ";
-
+                    var headerText = $" For - {office.Name}, you can contact: ";
+                    response += headerText;
+                    displayText += $"\r\n - {headerText}";
                     foreach(var officialIndex in office.OfficialIndices ?? Enumerable.Empty<long?>())
                     {
                         if (officialIndex is null)
                             continue;
                         var official = civicInfo.Officials[(int)officialIndex];
                         response += $"{official.Name} ";
+                        displayText += official.Name;
                         if (official.Phones?.Any() == true)
+                        {
                             response += $"by phone at {official.Phones.FirstOrDefault()} ";
-
+                            displayText += $" phone - {official.Phones.FirstOrDefault()}";
+                        }
                         if (official.Phones?.Any() == true && official.Emails?.Any() == true)
+                        {
                             response += "or ";
+                        }
 
                         if (official.Emails?.Any() == true)
-                            response += $"by email at {official.Emails.FirstOrDefault()} ";
+                        {
+                            response += $"by email at {official.Emails.FirstOrDefault()}";
+                            displayText += $" email - {official.Emails.FirstOrDefault()}";
+                        }
                         response += ".";
                     }
                 }
 
                 response += "You can ask for another zip code's reps.";
 
-                return response;
+                return  (response, displayText);
             }
             else
             {
@@ -83,7 +93,10 @@ namespace FindMyRep.Api.Services
                         break;
                 }
                 if (official is null)
-                    return "I wasn't able to find anyone for that. Try asking something else.";
+                {
+                    var missingResponse = "I wasn't able to find anyone for that. Try asking something else.";
+                    return (missingResponse, missingResponse);
+                }
 
                 var response = $"Here's what I found: {official.Name},";
                 if (official.Phones?.Any() == true)
@@ -93,10 +106,10 @@ namespace FindMyRep.Api.Services
 
                 response += "You can ask for another zip code's reps.";
 
-                return response;
+                return (response, response);
             }
 
-            return null;
+            return (null, null);
         }
 
         public string GetWelcomeMessage()

@@ -42,7 +42,7 @@ namespace FindMyRep.Api.Controllers
                 if (intentRequest.Intent.Name.Contains("ZipCode"))
                 {
                     var zipCode = intentRequest.Intent.Slots["ZipCode"];
-                    var response = await _infoResponseService.GetResponseAsync(intentRequest.Intent.Name, zipCode.Value);
+                    var (response, _) = await _infoResponseService.GetResponseAsync(intentRequest.Intent.Name, zipCode.Value);
 
                     return ResponseBuilder.Ask(response, null);
                 }

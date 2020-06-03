@@ -31,9 +31,9 @@ namespace FindMyRep.Api.Controllers
             {
                 // get the zip slot
                 var zipCode = dialogflowRequest?.queryResult?.parameters["zip-code"]?.ToString();
-                var responseString = await _infoResponseService.GetResponseAsync(intentName, zipCode);
 
-                response = Ask(responseString);               
+                (string responseString, string displayText) = await _infoResponseService.GetResponseAsync((string)intentName, (string)zipCode);
+                response = Ask(responseString, displayText);               
                 
             }
 
@@ -45,12 +45,12 @@ namespace FindMyRep.Api.Controllers
 
         }
 
-        private dynamic Ask(string outputText)
+        private dynamic Ask(string outputText, string displayTextOverride = null)
         {
 
             dynamic response = new
             {
-                FulfillmentText = outputText,
+                FulfillmentText = displayTextOverride ?? outputText,
                 Payload = new
                 {
                     Google = new
