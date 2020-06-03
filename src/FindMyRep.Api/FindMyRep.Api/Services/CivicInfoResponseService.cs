@@ -18,7 +18,7 @@ namespace FindMyRep.Api.Services
 
         public string GetFallbackMessage()
         {
-            return "You said something I don't understand yet. Try something else later.";
+            return "You said something I don't understand yet. You can say your zip code to get all of the government information for your area, or ask for a specific office such as \"Governor of \" and your zip code. So, how can I help?";
         }
 
         public string GetHelpMessage()
@@ -37,23 +37,26 @@ namespace FindMyRep.Api.Services
             {
                 var civicInfo = await _civicInfoProvider.GetLocalCivicInfo(zipCode);
 
-                var response = "Here are all of your representatives and their offices: ";
+                var response = "Here are all of your reps: ";
                 foreach(var office in civicInfo.Offices)
                 {
                     if (office.Name.ToLower().Contains("president"))
                         continue;
 
-                    response += $"For the office - {office.Name}, you can contact: ";
+                    response += $"For - {office.Name}, you can contact: ";
 
                     foreach(var officialIndex in office.OfficialIndices ?? Enumerable.Empty<long?>())
                     {
                         if (officialIndex is null)
                             continue;
                         var official = civicInfo.Officials[(int)officialIndex];
-                        response += $"{official.Name}. ";
-                        response += "You can contact them ";
+                        response += $"{official.Name} ";
                         if (official.Phones?.Any() == true)
                             response += $"by phone at {official.Phones.FirstOrDefault()} ";
+
+                        if (official.Phones?.Any() == true && official.Emails?.Any() == true)
+                            response += "or ";
+
                         if (official.Emails?.Any() == true)
                             response += $"by email at {official.Emails.FirstOrDefault()} ";
                         response += ".";

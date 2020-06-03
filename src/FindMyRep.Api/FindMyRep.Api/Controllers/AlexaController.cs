@@ -48,7 +48,7 @@ namespace FindMyRep.Api.Controllers
                 }
             }
 
-            return ResponseBuilder.Tell(_infoResponseService.GetFallbackMessage());
+            return ResponseBuilder.Ask(_infoResponseService.GetFallbackMessage(), null);
         }
     }
 }
