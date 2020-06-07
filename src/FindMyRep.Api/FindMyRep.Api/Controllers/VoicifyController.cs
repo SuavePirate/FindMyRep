@@ -23,29 +23,29 @@ namespace FindMyRep.Api.Controllers
         public async Task<IActionResult> HandleAllReps([FromBody]VoicifyRequest request)
         {
             var zipCode = GetZipCode(request);
-            var allRepsResponse = await _civicInfoResponseService.GetAllRepsResponseAsync(zipCode);
-            return Ok(BuildResponse(allRepsResponse.OutputSpeech, zipCode));
+            var response = await _civicInfoResponseService.GetAllRepsResponseAsync(zipCode);
+            return Ok(response);
         }
         [HttpPost("mayor")]
         public async Task<IActionResult> HandleMayor([FromBody]VoicifyRequest request)
         {
             var zipCode = GetZipCode(request);
-            var allRepsResponse = await _civicInfoResponseService.GetMayorResponseAsync(zipCode);
-            return Ok(BuildResponse(allRepsResponse.OutputSpeech, zipCode));
+            var response = await _civicInfoResponseService.GetMayorResponseAsync(zipCode);
+            return Ok(response);
         }
         [HttpPost("governor")]
         public async Task<IActionResult> HandleGovernor([FromBody]VoicifyRequest request)
         {
             var zipCode = GetZipCode(request);
-            var allRepsResponse = await _civicInfoResponseService.GetGovernorResponseAsync(zipCode);
-            return Ok(BuildResponse(allRepsResponse.OutputSpeech, zipCode));
+            var response = await _civicInfoResponseService.GetGovernorResponseAsync(zipCode);
+            return Ok(response);
         }
         [HttpPost("senator")]
         public async Task<IActionResult> HandleSenator([FromBody]VoicifyRequest request)
         {
             var zipCode = GetZipCode(request);
-            var allRepsResponse = await _civicInfoResponseService.GetSenatorResponseAsync(zipCode);
-            return Ok(BuildResponse(allRepsResponse.OutputSpeech, zipCode));
+            var response = await _civicInfoResponseService.GetSenatorResponseAsync(zipCode);
+            return Ok(response);
         }
 
         private string GetZipCode(VoicifyRequest request)
@@ -56,21 +56,6 @@ namespace FindMyRep.Api.Controllers
                 return request.OriginalRequest.SessionAttributes["zipCode"].ToString();
 
             return null;
-        }
-
-        private VoicifyResponse BuildResponse(string content, string zipCode)
-        {
-            return new VoicifyResponse
-            {
-                Data = new VoicifyResponseData
-                {
-                    Content = content,
-                    AdditionalSessionAttributes = new Dictionary<string, object>
-                    {
-                        {"zipCode", zipCode }
-                    }
-                }
-            };
         }
     }
 }

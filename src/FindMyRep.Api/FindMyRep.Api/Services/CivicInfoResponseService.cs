@@ -1,4 +1,6 @@
-﻿using FindMyRep.Api.Providers;
+﻿using FindMyRep.Api.Models.Voicify;
+using FindMyRep.Api.Models.Voicify.Response;
+using FindMyRep.Api.Providers;
 using Google.Apis.CivicInfo.v2.Data;
 using System;
 using System.Collections.Generic;
@@ -16,16 +18,19 @@ namespace FindMyRep.Api.Services
             _civicInfoProvider = civicInfoProvider;
         }
 
+        [Obsolete]
         public string GetFallbackMessage()
         {
             return "You said something I don't understand yet. You can say your zip code to get all of the government information for your area, or ask for a specific office such as \"Governor of \" and your zip code. So, how can I help?";
         }
 
+        [Obsolete]
         public string GetHelpMessage()
         {
             return "With the Find My Rep skill, you can ask for your local reps info by zip code";
         }
 
+        [Obsolete]
         public async Task<(string OutputSpeech, string DisplayText)> GetResponseAsync(string intent, string zipCode)
         {
             if (zipCode.Length == 4)
@@ -111,28 +116,38 @@ namespace FindMyRep.Api.Services
 
             return (null, null);
         }
-        public async Task<(string OutputSpeech, string DisplayText)> GetMayorResponseAsync(string zipCode)
+
+        [Obsolete]
+        public string GetWelcomeMessage()
         {
-            var official = await _civicInfoProvider.GetLocalMayor(zipCode);
-            return GetOfficialResponse(official);
-        }
-        public async Task<(string OutputSpeech, string DisplayText)> GetGovernorResponseAsync(string zipCode)
-        {
-            var official = await _civicInfoProvider.GetLocalGovernor(zipCode);
-            return GetOfficialResponse(official);
-        }
-        public async Task<(string OutputSpeech, string DisplayText)> GetSenatorResponseAsync(string zipCode)
-        {
-            var official = await _civicInfoProvider.GetLocalSenator(zipCode);
-            return GetOfficialResponse(official);
+            return "Welcome to Find My Rep! You can find contact information and details about your representatives from federal to local. Just say your zip code.";
         }
 
-        private (string OutputSpeech, string DisplayText) GetOfficialResponse(Official official)
+
+
+
+        public async Task<VoicifyResponse> GetMayorResponseAsync(string zipCode)
+        {
+            var official = await _civicInfoProvider.GetLocalMayor(zipCode);
+            return GetOfficialResponse(official, zipCode);
+        }
+        public async Task<VoicifyResponse> GetGovernorResponseAsync(string zipCode)
+        {
+            var official = await _civicInfoProvider.GetLocalGovernor(zipCode);
+            return GetOfficialResponse(official, zipCode);
+        }
+        public async Task<VoicifyResponse> GetSenatorResponseAsync(string zipCode)
+        {
+            var official = await _civicInfoProvider.GetLocalSenator(zipCode);
+            return GetOfficialResponse(official, zipCode);
+        }
+
+        private VoicifyResponse GetOfficialResponse(Official official, string zipCode)
         {
             if (official is null)
             {
                 var missingResponse = "I wasn't able to find anyone for that. Try asking something else.";
-                return (missingResponse, missingResponse);
+                return BuildResponse(missingResponse, null, null, zipCode);
             }
 
             var response = $"Here's what I found: {official.Name},";
@@ -142,10 +157,10 @@ namespace FindMyRep.Api.Services
                 response += $"You can also email them at {official.Emails.FirstOrDefault()}. ";
 
 
-            return (response, response);
+            return BuildResponse(response, null, official.PhotoUrl, zipCode);
         }
 
-        public async Task<(string OutputSpeech, string DisplayText)> GetAllRepsResponseAsync(string zipCode)
+        public async Task<VoicifyResponse> GetAllRepsResponseAsync(string zipCode)
         {
             if (zipCode.Length == 4)
             {
@@ -164,18 +179,18 @@ namespace FindMyRep.Api.Services
                     continue;
                 var headerText = $" For - {office.Name}, you can contact: ";
                 response += headerText;
-                displayText += $"\r\n - {headerText}";
+                displayText += $"\r\n - {office.Name}: ";
                 foreach (var officialIndex in office.OfficialIndices ?? Enumerable.Empty<long?>())
                 {
                     if (officialIndex is null)
                         continue;
                     var official = civicInfo.Officials[(int)officialIndex];
-                    response += $"{official.Name} ";
-                    displayText += official.Name;
+                    response += $" {official.Name} ";
+                    displayText += $"\r\n   {official.Name}";
                     if (official.Phones?.Any() == true)
                     {
                         response += $"by phone at {official.Phones.FirstOrDefault()} ";
-                        displayText += $" phone - {official.Phones.FirstOrDefault()}";
+                        displayText += $"\r\n   phone: {official.Phones.FirstOrDefault()}";
                     }
                     if (official.Phones?.Any() == true && official.Emails?.Any() == true)
                     {
@@ -185,19 +200,41 @@ namespace FindMyRep.Api.Services
                     if (official.Emails?.Any() == true)
                     {
                         response += $"by email at {official.Emails.FirstOrDefault()}";
-                        displayText += $" email - {official.Emails.FirstOrDefault()}";
+                        displayText += $"\r\n    email: {official.Emails.FirstOrDefault()}";
                     }
                     response += ".";
                 }
             }
 
-            return (response, displayText);
+            return BuildResponse(response, displayText, null, zipCode);
         }
 
 
-        public string GetWelcomeMessage()
+        private VoicifyResponse BuildResponse(string content, string displayText, string imageUrl, string zipCode)
         {
-            return "Welcome to Find My Rep! You can find contact information and details about your representatives from federal to local. Just say your zip code.";
+            var response = new VoicifyResponse
+            {
+                Data = new VoicifyResponseData
+                {
+                    Content = content,
+                    AdditionalSessionAttributes = new Dictionary<string, object>
+                    {
+                        {"zipCode", zipCode }
+                    }
+                }
+            };
+
+            if (!string.IsNullOrEmpty(displayText))
+                response.Data.DisplayTextOverride = displayText;
+            if (!string.IsNullOrEmpty(imageUrl))
+                response.Data.LargeImage = new MediaContent
+                {
+                    Url = imageUrl
+                };
+
+
+            return response;
         }
+
     }
 }
