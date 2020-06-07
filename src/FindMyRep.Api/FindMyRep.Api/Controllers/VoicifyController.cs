@@ -26,6 +26,7 @@ namespace FindMyRep.Api.Controllers
             var response = await _civicInfoResponseService.GetAllRepsResponseAsync(zipCode);
             return Ok(response);
         }
+
         [HttpPost("mayor")]
         public async Task<IActionResult> HandleMayor([FromBody]VoicifyRequest request)
         {
@@ -33,6 +34,7 @@ namespace FindMyRep.Api.Controllers
             var response = await _civicInfoResponseService.GetMayorResponseAsync(zipCode);
             return Ok(response);
         }
+
         [HttpPost("governor")]
         public async Task<IActionResult> HandleGovernor([FromBody]VoicifyRequest request)
         {
@@ -40,6 +42,7 @@ namespace FindMyRep.Api.Controllers
             var response = await _civicInfoResponseService.GetGovernorResponseAsync(zipCode);
             return Ok(response);
         }
+
         [HttpPost("senator")]
         public async Task<IActionResult> HandleSenator([FromBody]VoicifyRequest request)
         {
@@ -50,12 +53,24 @@ namespace FindMyRep.Api.Controllers
 
         private string GetZipCode(VoicifyRequest request)
         {
-            if (request?.OriginalRequest?.Slots?.ContainsKey("zipCode") == true)
-                return request.OriginalRequest.Slots["zipCode"];
-            if (request?.OriginalRequest?.SessionAttributes?.ContainsKey("zipCode") == true)
-                return request.OriginalRequest.SessionAttributes["zipCode"].ToString();
+            string zipCode = null;
 
-            return null;
+            if (request?.OriginalRequest?.SessionAttributes?.ContainsKey("zipCode") == true)
+                zipCode = request.OriginalRequest.SessionAttributes["zipCode"].ToString();
+
+            if (request?.OriginalRequest?.Slots?.ContainsKey("number") == true)
+                zipCode = request.OriginalRequest.Slots["number"];
+
+            if (request?.OriginalRequest?.Slots?.ContainsKey("zipCode") == true)
+                zipCode = request.OriginalRequest.Slots["zipCode"];
+
+
+            if (zipCode?.Length == 4)
+            {
+                zipCode = $"0{zipCode}";
+            }
+
+            return zipCode;
         }
     }
 }
