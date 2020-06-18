@@ -1,0 +1,108 @@
+{
+  "domain": "FindMyRep",
+  "intents": [
+    {
+      "name": "AMAZON.YesIntent",
+      "description": "",
+      "implicit_slots": [],
+      "slots": []
+    },
+    {
+      "name": "AMAZON.NoIntent",
+      "description": "",
+      "implicit_slots": [],
+      "slots": []
+    },
+    {
+      "name": "MayorZipCodeIntent",
+      "description": "",
+      "implicit_slots": [],
+      "slots": [
+        {
+          "name": "ZipCode",
+          "capture_name": "ZipCode",
+          "description": "",
+          "type": "integer",
+          "facets": "{\"ordinals\": false, \"range\": [0, 9223372036854775807]}"
+        }
+      ]
+    },
+    {
+      "name": "AMAZON.StopIntent",
+      "description": "",
+      "implicit_slots": [],
+      "slots": []
+    },
+    {
+      "name": "SenatorZipCodeIntent",
+      "description": "",
+      "implicit_slots": [],
+      "slots": [
+        {
+          "name": "ZipCode",
+          "capture_name": "ZipCode",
+          "description": "",
+          "type": "integer",
+          "facets": "{\"ordinals\": false, \"range\": [0, 9223372036854775807]}"
+        }
+      ]
+    },
+    {
+      "name": "AllZipCodeIntent",
+      "description": "",
+      "implicit_slots": [],
+      "slots": [
+        {
+          "name": "ZipCode",
+          "capture_name": "ZipCode",
+          "description": "",
+          "type": "integer",
+          "facets": "{\"ordinals\": false, \"range\": [0, 9223372036854775807]}"
+        }
+      ]
+    },
+    {
+      "name": "AMAZON.RepeatIntent",
+      "description": "",
+      "implicit_slots": [],
+      "slots": []
+    },
+    {
+      "name": "AMAZON.CancelIntent",
+      "description": "",
+      "implicit_slots": [],
+      "slots": []
+    },
+    {
+      "name": "AMAZON.FallbackIntent",
+      "description": "",
+      "implicit_slots": [],
+      "slots": []
+    },
+    {
+      "name": "GovZipCodeIntent",
+      "description": "",
+      "implicit_slots": [],
+      "slots": [
+        {
+          "name": "ZipCode",
+          "capture_name": "ZipCode",
+          "description": "",
+          "type": "integer",
+          "facets": "{\"ordinals\": false, \"range\": [0, 9223372036854775807]}"
+        }
+      ]
+    },
+    {
+      "name": "AMAZON.HelpIntent",
+      "description": "",
+      "implicit_slots": [],
+      "slots": []
+    }
+  ],
+  "tags": [
+    "o",
+    "b_ZipCode",
+    "i_ZipCode"
+  ]
+}

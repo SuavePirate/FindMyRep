@@ -64,6 +64,9 @@ namespace FindMyRep.Api.Controllers
             if (request?.OriginalRequest?.Slots?.ContainsKey("zipCode") == true)
                 zipCode = request.OriginalRequest.Slots["zipCode"];
 
+            if (request?.OriginalRequest?.Slots?.ContainsKey("ZipCode") == true)
+                zipCode = request.OriginalRequest.Slots["ZipCode"];
+
 
             if (zipCode?.Length == 4)
             {

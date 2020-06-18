@@ -150,7 +150,7 @@ namespace FindMyRep.Api.Services
                 return BuildResponse(missingResponse, null, null, zipCode);
             }
 
-            var response = $"Here's what I found: {official.Name},";
+            var response = $"Here's what I found: {official.Name}, ";
             if (official.Phones?.Any() == true)
                 response += $"and you can call them at {official.Phones.FirstOrDefault()}. ";
             if (official.Emails?.Any() == true)
