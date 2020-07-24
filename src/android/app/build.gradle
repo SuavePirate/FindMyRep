@@ -88,6 +88,10 @@ dependencies {
     implementation 'androidx.media:media:1.1.0'
     implementation 'com.google.android.exoplayer:exoplayer-core:2.11.0'
 
+    // picasso for lazy loading images from a remote source
+    implementation 'com.squareup.picasso:picasso:2.71828'
+    implementation 'com.jakewharton.picasso:picasso2-okhttp3-downloader:1.1.0'
+
 }
 
 // a new top-level block if you don't already have native dependencies

@@ -13,21 +13,25 @@ import com.github.kittinunf.fuel.Fuel
 import com.github.kittinunf.fuel.gson.jsonBody
 import com.github.kittinunf.fuel.gson.responseObject
 import com.google.android.material.snackbar.Snackbar
+import com.squareup.picasso.OkHttp3Downloader
+import com.squareup.picasso.Picasso
 import io.spokestack.spokestack.OnSpeechEventListener
 import io.spokestack.spokestack.SpeechContext
 import io.spokestack.spokestack.SpeechPipeline
 import io.spokestack.spokestack.nlu.NLUResult
 import io.spokestack.spokestack.nlu.TraceListener
 import io.spokestack.spokestack.nlu.tensorflow.TensorflowNLU
-import io.spokestack.spokestack.tts.SpokestackTTSOutput
 import io.spokestack.spokestack.tts.SynthesisRequest
 import io.spokestack.spokestack.tts.TTSManager
 import io.spokestack.spokestack.util.EventTracer
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.content_main.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
+import okhttp3.Protocol
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -40,14 +44,26 @@ class MainActivity : AppCompatActivity(), OnSpeechEventListener, TraceListener {
     private var tts: TTSManager? = null
     private var voicifyUser: VoicifyUser? = null
     private var sessionId: String? = null
+    private var client: OkHttpClient? = null
+    private var picasso: Picasso? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
-
+        sessionId = UUID.randomUUID().toString()
         checkForModels()
-        voicifyUser = VoicifyUser(UUID.randomUUID().toString(), UUID.randomUUID().toString());
+        voicifyUser = VoicifyUser(UUID.randomUUID().toString(), UUID.randomUUID().toString())
+
+        client = OkHttpClient.Builder()
+            .protocols(Collections.singletonList(Protocol.HTTP_1_1))
+            .build()
+        picasso = Picasso.Builder(this)
+            .downloader(OkHttp3Downloader(client))
+            .build()
+
+        Picasso.setSingletonInstance(picasso!!)
+
 
         pipeline = SpeechPipeline.Builder()
             .useProfile("io.spokestack.spokestack.profile.VADTriggerAndroidASR")
@@ -58,25 +74,28 @@ class MainActivity : AppCompatActivity(), OnSpeechEventListener, TraceListener {
             .setTTSServiceClass("io.spokestack.spokestack.tts.SpokestackTTSService")
             .setOutputClass("io.spokestack.spokestack.tts.SpokestackTTSOutput")
             .setProperty("spokestack-id", "3b40def8-f77e-42f8-8d5c-47a8fd7e4797")
-            .setProperty("spokestack-secret",
-                "9DAC2C5AA917752AB1854B47DE1990560203394AF5716E157EDD57C7DAD99949")
+            .setProperty(
+                "spokestack-secret",
+                "9DAC2C5AA917752AB1854B47DE1990560203394AF5716E157EDD57C7DAD99949"
+            )
             .setAndroidContext(applicationContext)
             .setLifecycle(lifecycle)
             .build()
 
         fab.setOnClickListener { view ->
+            tts?.stopPlayback()
             when {
                 ContextCompat.checkSelfPermission(
                     this,
                     Manifest.permission.RECORD_AUDIO
                 ) == PackageManager.PERMISSION_GRANTED -> {
                     // You can use the API that requires the permission.
-                    if(pipeline?.isRunning == true) {
+                    if (pipeline?.isRunning == true) {
                         pipeline?.stop()
                         Snackbar.make(view, "No longer listening", Snackbar.LENGTH_LONG)
                             .setAction("Action", null).show()
                     } else {
-                        sessionId = UUID.randomUUID().toString();
+
                         pipeline?.start()
                         Snackbar.make(view, "Now listening", Snackbar.LENGTH_LONG)
                             .setAction("Action", null).show()
@@ -87,8 +106,9 @@ class MainActivity : AppCompatActivity(), OnSpeechEventListener, TraceListener {
                     ActivityCompat
                         .requestPermissions(
                             this,
-                            Array<String>(1) {_ -> Manifest.permission.RECORD_AUDIO},
-                            1);
+                            Array<String>(1) { _ -> Manifest.permission.RECORD_AUDIO },
+                            1
+                        );
                 }
             }
 
@@ -119,11 +139,11 @@ class MainActivity : AppCompatActivity(), OnSpeechEventListener, TraceListener {
     private fun handleSpeech(transcript: String) {
         pipeline?.stop()
         val nlu = TensorflowNLU.Builder()
-        .setProperty("nlu-model-path", "$cacheDir/nlu.tflite")
-        .setProperty("nlu-metadata-path", "$cacheDir/metadata.json")
-        .setProperty("wordpiece-vocab-path", "$cacheDir/vocab.txt")
-        .addTraceListener(this)
-        .build()
+            .setProperty("nlu-model-path", "$cacheDir/nlu.tflite")
+            .setProperty("nlu-metadata-path", "$cacheDir/metadata.json")
+            .setProperty("wordpiece-vocab-path", "$cacheDir/vocab.txt")
+            .addTraceListener(this)
+            .build()
 
         GlobalScope.launch(Dispatchers.Default) {
             nlu?.let {
@@ -139,19 +159,33 @@ class MainActivity : AppCompatActivity(), OnSpeechEventListener, TraceListener {
                         .responseObject<VoicifyCustomAssistantResponse> { _, _, voicifyResult ->
                             // handle result similarly as it is shown by the core module
                             Log.i("VOICIFY_RESPONSE", voicifyResult.component1()?.ssml)
-                            val ttsRequest = SynthesisRequest.Builder(voicifyResult.component1()?.ssml)
-                                .withMode(SynthesisRequest.Mode.SSML).build()
+
+                            displayText.text = voicifyResult.component1()?.displayText;
+
+                            if (voicifyResult.component1()?.foregroundImage != null) {
+                                Picasso.get().load(voicifyResult.component1()?.foregroundImage?.url)
+                                    .into(displayImage);
+                            }
+
+                            val ttsRequest =
+                                SynthesisRequest.Builder(voicifyResult.component1()?.ssml)
+                                    .withMode(SynthesisRequest.Mode.SSML).build()
 //                            val ttsRequest = SynthesisRequest.Builder("Here's what I found. Elizabeth Warren, and you can call them at a phone number.   Would you like to learn about your governor?").build()
                             tts?.synthesize(ttsRequest)
+
                         }
                 }
             }
         }
     }
 
-    private fun getVoicifyRequest(transcript: String, result: NLUResult): VoicifyCustomAssistantRequest? {
+    private fun getVoicifyRequest(
+        transcript: String,
+        result: NLUResult
+    ): VoicifyCustomAssistantRequest? {
         var requestModel: VoicifyCustomAssistantRequest? = null;
-        val requestContext: VoicifyRequestContext = VoicifyRequestContext(sessionId!!,
+        val requestContext: VoicifyRequestContext = VoicifyRequestContext(
+            sessionId!!,
             false,
             "IntentRequest",
             null,
@@ -159,18 +193,32 @@ class MainActivity : AppCompatActivity(), OnSpeechEventListener, TraceListener {
             "Android App",
             true,
             "en-US",
-            null)
+            null
+        )
 
-        if(result.intent == "SenatorZipCodeIntent" || result.intent == "MayorZipCodeIntent" || result.intent == "GovZipCodeIntent" || result.intent == "AllZipCodeIntent") {
+        if (result.intent == "SenatorZipCodeIntent" || result.intent == "MayorZipCodeIntent" || result.intent == "GovZipCodeIntent" || result.intent == "AllZipCodeIntent") {
             requestContext.requestName = result.intent
             requestContext.slots = result.slots.mapValues { it.value.rawValue.toString() }
             requestContext.requiresLanguageUnderstanding = false
         }
 
-        requestModel = VoicifyCustomAssistantRequest(UUID.randomUUID().toString(),
+        requestModel = VoicifyCustomAssistantRequest(
+            UUID.randomUUID().toString(),
             requestContext,
-            VoicifyDevice(UUID.randomUUID().toString(), "Android Phone", true, true,true,true,true,true,true,true),
-            voicifyUser!!);
+            VoicifyDevice(
+                UUID.randomUUID().toString(),
+                "Android Phone",
+                true,
+                true,
+                true,
+                true,
+                true,
+                true,
+                true,
+                true
+            ),
+            voicifyUser!!
+        );
 
         return requestModel
     }

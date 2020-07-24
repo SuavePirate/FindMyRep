@@ -33,8 +33,13 @@ data class VoicifyCustomAssistantRequest(val requestId: String,
 
 
 data class VoicifyCustomAssistantResponse(val ssml: String,
-                                        val outputSpeech: String,
-                                        val displayText: String,
-                                        val responseTemplate: String,
-                                        val endSession: Boolean
-                                        )
+                                          val outputSpeech: String,
+                                          val displayText: String,
+                                          val responseTemplate: String,
+                                          val endSession: Boolean,
+                                          val foregroundImage: VoicifyMediaResponse?,
+                                          val backgroundImage: VoicifyMediaResponse?,
+                                          val audio: VoicifyMediaResponse?,
+                                          val video: VoicifyMediaResponse?                                        );
+
+data class VoicifyMediaResponse(val url: String, val mediaType: String)
