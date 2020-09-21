@@ -226,11 +226,13 @@ namespace FindMyRep.Api.Services
 
             if (!string.IsNullOrEmpty(displayText))
                 response.Data.DisplayTextOverride = displayText;
-            if (!string.IsNullOrEmpty(imageUrl))
-                response.Data.LargeImage = new MediaContent
-                {
-                    Url = imageUrl
-                };
+
+            // NOTE: temporarily removed because images are not https
+            //if (!string.IsNullOrEmpty(imageUrl))
+            //    response.Data.LargeImage = new MediaContent
+            //    {
+            //        Url = imageUrl
+            //    };
 
 
             return response;
